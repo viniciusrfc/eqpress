@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 2026-11-09
+- 0.1.2: "Instalar scripts no InDesign" e "Copiar diagnóstico" no topo da tela Início. Ficavam abaixo
+  da parte visível da janela, e o Mac esconde a barra de rolagem.
 - Abertura do código: licença MIT, `THIRD_PARTY_NOTICES.md`, licenças das ferramentas embutidas nos
   instaladores (`recursos/licencas`), README com instalação e uso no Mac e no Windows.
 - Tag `v*` publica o `.dmg` e o `.exe` no Release do GitHub.

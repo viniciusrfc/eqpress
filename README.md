@@ -179,7 +179,7 @@ cd editor && npm ci && npm run vendor && npx tauri dev
 ```
 
 **Instaladores.** São gerados em `.github/workflows/` (`mac.yml` e `windows.yml`). Para lançar uma
-versão, atualize `version` em `editor/src-tauri/tauri.conf.json` e `Cargo.toml` e envie uma tag
+versão, atualize `version` em `editor/src-tauri/tauri.conf.json`, `Cargo.toml` e `eqpress/__init__.py` e envie uma tag
 `vX.Y.Z`. O CI publica o `.dmg` e o `.exe` no Release.
 
 **Contribuições.** Issues e pull requests são bem-vindos.

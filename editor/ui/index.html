@@ -19,6 +19,12 @@
 
 <section class="vista" id="vista-inicio">
   <div class="inicio">
+    <!-- no topo: abaixo da dobra (janela de 580 px) e sem barra de rolagem no Mac, ninguém achava -->
+    <div class="acoes">
+      <button id="eq-scripts" class="discreto">Instalar scripts no InDesign</button>
+      <button id="diag" class="discreto">Copiar diagnóstico</button>
+      <span class="resultado" id="eq-resultado" aria-live="polite"></span>
+    </div>
     <article class="tarefa">
       <h1>Preparar um Word</h1>
       <p class="explica">Troca as equações do MathType pelas do EqPress, no padrão do livro. Gera o Word para o InDesign, um Word editável e os PDFs das equações.</p>
@@ -65,9 +71,6 @@
       <p class="explica">No InDesign, selecione a equação e rode “EqPress - Editar equação selecionada”. Ou abra o arquivo da equação aqui.</p>
       <div class="acoes">
         <button id="eq-abrir">Abrir equação…</button>
-        <button id="eq-scripts" class="discreto">Instalar scripts no InDesign</button>
-        <button id="diag" class="discreto">Copiar diagnóstico</button>
-        <span class="resultado" id="eq-resultado" aria-live="polite"></span>
       </div>
     </article>
   </div>
