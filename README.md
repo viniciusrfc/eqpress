@@ -2,6 +2,9 @@
 
 Prepara equações do MathType para livros diagramados no Adobe InDesign, no Mac e no Windows.
 
+> **Apoie o projeto:** o EqPress é gratuito. Se ele ajuda no seu trabalho, a chave Pix é
+> `viniciusrfc@gmail.com`.
+
 O EqPress lê um Word (`.docx`) com equações do MathType e refaz cada uma no padrão do livro: fonte,
 corpo, cor e tinta. O resultado é um PDF vetorial por equação, em 100K ou tinta especial, com
 sobreimpressão. No InDesign, um script troca as imagens pelos PDFs e alinha cada equação à linha de
