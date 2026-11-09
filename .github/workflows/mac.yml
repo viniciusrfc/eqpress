@@ -1,0 +1,101 @@
+# Instalador do Mac (Apple Silicon, macOS 15+: o pikepdf só tem wheel macosx_15_0_arm64): núcleo empacotado + tectonic com pacote TeX offline +
+# Ghostscript compilado do código-fonte (sem Homebrew) + Inkscape enxuto → EqPress.dmg.
+# Roda em tags v* e quando pedido manualmente. O app não é assinado pela Apple: na 1ª vez,
+# Ajustes do Sistema › Privacidade e Segurança › Abrir Mesmo Assim (README).
+name: mac
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+jobs:
+  instalador:
+    runs-on: macos-15
+    permissions:
+      contents: write  # enviar o .dmg ao Release
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GS: "10.08.0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Núcleo (PyInstaller)
+        run: |
+          python -m pip install -r requirements.txt pyinstaller==6.16.0
+          pyinstaller -y --log-level WARN eqpress-nucleo.spec
+          mkdir -p editor/src-tauri/binaries
+          cp dist/eqpress-nucleo editor/src-tauri/binaries/eqpress-nucleo-aarch64-apple-darwin
+      - uses: actions/cache@v4
+        id: gs
+        with:
+          path: gs-bin
+          key: gs-${{ env.GS }}-macos-15-arm64
+      - name: Ghostscript (do código-fonte; só depende do macOS)
+        if: steps.gs.outputs.cache-hit != 'true'
+        run: |
+          gh release download "gs${GS//./}" --repo ArtifexSoftware/ghostpdl-downloads -p "ghostscript-$GS.tar.gz"
+          tar xzf ghostscript-$GS.tar.gz
+          cd ghostscript-$GS
+          PKG_CONFIG=false ./configure --without-x --disable-cups --disable-dbus --disable-gtk \
+            --disable-fontconfig --without-libidn --without-libpaper --without-tesseract \
+            --without-pdftoraster --without-ijs > /dev/null
+          make -j4 > /dev/null
+          mkdir -p ../gs-bin && cp bin/gs ../gs-bin/
+      - name: Ferramentas (tectonic + pacote TeX offline, Ghostscript, Inkscape)
+        run: |
+          f=ferramentas
+          mkdir -p $f/tectonic $f/tectonic-cache $f/gs/bin
+          gh release download "tectonic@0.17.0" --repo tectonic-typesetting/tectonic -p "*aarch64-apple-darwin.tar.gz" -D tt
+          tar xzf tt/*.tar.gz -C $f/tectonic
+          cp gs-bin/gs $f/gs/bin/
+          mkdir -p $f/licencas
+          cp LICENSE THIRD_PARTY_NOTICES.md recursos/licencas/* recursos/fontes/STIX-OFL.txt $f/licencas/
+          # nada de Homebrew dentro do app
+          otool -L $f/gs/bin/gs $f/tectonic/tectonic | grep -E "homebrew|/usr/local" && exit 1
+          brew install --cask inkscape
+          echo "Ghostscript $GS; Inkscape $(defaults read /Applications/Inkscape.app/Contents/Info.plist CFBundleShortVersionString); tectonic 0.17.0" > $f/licencas/VERSOES.txt
+          ditto /Applications/Inkscape.app $f/Inkscape.app
+          # só o necessário para PDF → EMF pela linha de comando
+          r=$f/Inkscape.app/Contents/Resources
+          rm -rf $r/share/locale $r/share/gir-1.0 $r/share/doc $r/share/man $r/share/gtk-doc $r/lib/python3* \
+            $r/bin/python* $f/Inkscape.app/Contents/Frameworks/Python.framework \
+            $r/share/inkscape/{tutorials,examples,extensions,templates,doc,screens,themes}
+          # pacote TeX: compilar uma vez com o cache apontado para a pasta que vai no app
+          export EQPRESS_FERRAMENTAS=$PWD/$f TECTONIC_CACHE_DIR=$PWD/$f/tectonic-cache
+          ./dist/eqpress-nucleo diagnostico --familia Arial
+          echo "tectonic 0.17.0 / ${{ github.sha }}" > $f/tectonic-cache/VERSAO
+          du -sh $f/*
+      - name: Teste offline do núcleo empacotado
+        run: |
+          export EQPRESS_FERRAMENTAS=$PWD/ferramentas PATH=/usr/bin:/bin
+          ./dist/eqpress-nucleo diagnostico --familia Arial --completo
+          python3 tests/fluxo_app.py dist/eqpress-nucleo
+      - name: App e .dmg
+        run: |
+          cd editor
+          npm ci
+          npm run vendor
+          npx tauri build --bundles app
+          app=src-tauri/target/release/bundle/macos/EqPress.app
+          # ferramentas por ditto (o Inkscape.app tem links simbólicos) e assinatura ad hoc de novo
+          rm -rf ../ferramentas/web  # conferência antiga do LaTeX (node), versionada no repositório
+          ditto ../ferramentas $app/Contents/Resources/ferramentas
+          codesign --force --deep --sign - $app
+          mkdir -p dmg && ditto $app dmg/EqPress.app && ln -s /Applications dmg/Aplicativos
+          hdiutil create -volname EqPress -srcfolder dmg -format UDZO -ov EqPress.dmg
+          ls -la EqPress.dmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EqPress-Mac
+          path: editor/EqPress.dmg
+          retention-days: 30
+      - name: Enviar ao Release (só em tags)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          # os dois workflows criam o mesmo Release: quem chegar depois só envia o arquivo
+          gh release create "$GITHUB_REF_NAME" --generate-notes --repo "$GITHUB_REPOSITORY" || true
+          gh release upload "$GITHUB_REF_NAME" editor/EqPress.dmg --clobber --repo "$GITHUB_REPOSITORY"

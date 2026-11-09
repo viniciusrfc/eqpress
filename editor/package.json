@@ -1,0 +1,18 @@
+{
+  "name": "eqpress-editor",
+  "private": true,
+  "description": "Editor de fórmulas EqPress (Tauri + MathLive). spec/EDITOR.md",
+  "scripts": {
+    "vendor": "node vendor.mjs",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@fontsource/lato": "^5.3.0",
+    "katex": "^0.16.11",
+    "mathjax": "^3.2.2",
+    "mathlive": "0.105.3"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.9.6"
+  }
+}

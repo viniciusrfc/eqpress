@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eqpress.local/spec/PRESET_SCHEMA.json",
+  "title": "Preset EqPress",
+  "description": "Padrão tipográfico e de cor aplicado em lote às equações. Ver PRESET.md.",
+  "type": "object",
+  "required": ["schema", "nome", "versao", "categorias", "tamanhos", "cores", "saida"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": 1 },
+    "nome": { "type": "string", "minLength": 1 },
+    "titulo": { "type": "string", "description": "Nome legível do padrão, como aparece no app (ex.: \"Física 8º ano – Arial 10\")." },
+    "versao": { "type": "integer", "minimum": 1, "description": "Incrementa a cada alteração (O3). O arquivo se chama <nome>_v<versao>.json." },
+    "colecao": { "type": "string" },
+    "baseado_em": { "type": "string", "description": "Preset de origem (herança simples: campos ausentes vêm dele)." },
+
+    "categorias": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["texto", "funcao", "variavel", "grego_min", "grego_mai", "simbolo", "vetor_matriz", "numero"],
+      "properties": {
+        "texto": { "$ref": "#/$defs/categoria" },
+        "funcao": { "$ref": "#/$defs/categoria" },
+        "variavel": { "$ref": "#/$defs/categoria" },
+        "grego_min": { "$ref": "#/$defs/categoria" },
+        "grego_mai": { "$ref": "#/$defs/categoria" },
+        "simbolo": { "$ref": "#/$defs/categoria" },
+        "vetor_matriz": { "$ref": "#/$defs/categoria" },
+        "numero": { "$ref": "#/$defs/categoria" },
+        "extra": { "$ref": "#/$defs/categoria" }
+      }
+    },
+
+    "fonte_matematica": {
+      "type": "string",
+      "description": "Fonte OpenType MATH (instalada no Mac) usada para delimitadores extensíveis, radicais e operadores grandes e como reserva de glifos ausentes. Nunca uma fonte do MathType."
+    },
+
+    "tamanhos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["completo", "subscrito", "sub_subscrito", "simbolo", "sub_simbolo"],
+      "properties": {
+        "completo": { "$ref": "#/$defs/medida_pt" },
+        "subscrito": { "$ref": "#/$defs/medida" },
+        "sub_subscrito": { "$ref": "#/$defs/medida" },
+        "simbolo": { "$ref": "#/$defs/medida" },
+        "sub_simbolo": { "$ref": "#/$defs/medida" }
+      }
+    },
+
+    "espacamentos": {
+      "type": "object",
+      "description": "Os 30 parâmetros do EQN_PREFS do MTEF (nomes em minúsculas, sem 'parm'). Percentual = relativo ao tamanho completo. Ausente = padrão do renderizador.",
+      "additionalProperties": false,
+      "properties": {
+        "linespace": { "$ref": "#/$defs/medida" }, "matrixrow": { "$ref": "#/$defs/medida" },
+        "matrixcol": { "$ref": "#/$defs/medida" }, "supheight": { "$ref": "#/$defs/medida" },
+        "subdepth": { "$ref": "#/$defs/medida" }, "subsupgap": { "$ref": "#/$defs/medida" },
+        "limheight": { "$ref": "#/$defs/medida" }, "limdepth": { "$ref": "#/$defs/medida" },
+        "limspace": { "$ref": "#/$defs/medida" }, "fractheight": { "$ref": "#/$defs/medida" },
+        "fractdepth": { "$ref": "#/$defs/medida" }, "fractover": { "$ref": "#/$defs/medida" },
+        "fractthick": { "$ref": "#/$defs/medida" }, "fractthick2": { "$ref": "#/$defs/medida" },
+        "fractgap": { "$ref": "#/$defs/medida" }, "fenceover": { "$ref": "#/$defs/medida" },
+        "operspacing": { "$ref": "#/$defs/medida" }, "nonoperspacing": { "$ref": "#/$defs/medida" },
+        "charwidth": { "$ref": "#/$defs/medida" }, "mingap": { "$ref": "#/$defs/medida" },
+        "vradgap": { "$ref": "#/$defs/medida" }, "hradgap": { "$ref": "#/$defs/medida" },
+        "radwidth": { "$ref": "#/$defs/medida" }, "embellgap": { "$ref": "#/$defs/medida" },
+        "primeheight": { "$ref": "#/$defs/medida" }, "box_stroke_thick": { "$ref": "#/$defs/medida" },
+        "strike_thru_thick": { "$ref": "#/$defs/medida" }, "matrix_part_thick": { "$ref": "#/$defs/medida" },
+        "rad_thick": { "$ref": "#/$defs/medida" }, "horiz_fence_gap": { "$ref": "#/$defs/medida" }
+      }
+    },
+
+    "cores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["definicoes", "padrao"],
+      "properties": {
+        "definicoes": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/$defs/cor" }
+        },
+        "padrao": { "type": "string", "description": "Nome de uma cor em 'definicoes' usada por todas as categorias sem 'cor' própria." },
+        "destaque": { "type": "string", "description": "Cor aplicada quando a equação de origem tem cor não-preta (MTEF COLOR_DEF). Ausente = ignora a cor de origem." },
+        "sobreimpressao": { "type": "boolean", "default": true, "description": "Grava overprint (OP/op/OPM 1) no PDF da equação para tintas de preto 100 % K." }
+      }
+    },
+
+    "saida": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["formato", "texto"],
+      "properties": {
+        "formato": { "enum": ["pdf", "pdfx4", "pdfx1a"], "default": "pdfx4" },
+        "extras": { "type": "array", "items": { "enum": ["eps", "emf"] }, "uniqueItems": true, "default": [], "description": "Saídas adicionais ao lado do PDF (PRESET §6, 2026-10-16)." },
+        "texto": { "enum": ["fontes_embutidas", "contorno"], "default": "contorno" },
+        "imagem_docx": { "enum": ["emf", "svg", "png"], "default": "emf", "description": "Formato da imagem dentro do .docx (SPIKE S1: emf). Marcador de lugar; a cor final vem do PDF vinculado." },
+        "png_dpi": { "type": "integer", "minimum": 300, "maximum": 2400, "default": 1200 }
+      }
+    },
+
+    "texto_vivo": {
+      "description": "Otimização O2: equações triviais viram texto com estilo de caractere do InDesign.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "habilitado": { "type": "boolean", "default": false },
+        "estilo_caractere": { "type": "string", "description": "Nome do estilo de caractere no InDesign aplicado ao trecho convertido." },
+        "estilos_por_categoria": {
+          "type": "object",
+          "description": "Estilo de caractere do InDesign por categoria (ex.: variavel → 'Eq Variável'). Ausente = estilo_caractere.",
+          "additionalProperties": { "type": "string" }
+        },
+        "regras": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "um_simbolo",
+              "numero",
+              "numero_com_unidade",
+              "variavel_igual_numero",
+              "sem_templates"
+            ]
+          },
+          "description": "Uma equação vira texto se satisfizer pelo menos uma regra e nenhuma restrição de 'nunca'."
+        },
+        "nunca": {
+          "type": "array",
+          "items": { "enum": ["com_subscrito", "com_sobrescrito", "com_fracao", "com_raiz", "com_delimitador_extensivel", "com_cor", "destacada"] },
+          "default": ["com_fracao", "com_raiz", "com_delimitador_extensivel", "destacada"]
+        }
+      }
+    },
+
+    "qa": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "exigir_tinta_unica": { "type": "boolean", "default": true, "description": "Falha o lote se uma equação usar tinta diferente das cores definidas (ex.: C/M/Y com preset 100 % K)." },
+        "tolerancia_baseline_pt": { "type": "number", "default": 0.1 }
+      }
+    }
+  },
+
+  "$defs": {
+    "medida_pt": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?pt$" },
+    "medida": { "type": "string", "pattern": "^-?[0-9]+(\\.[0-9]+)?(pt|%)$" },
+    "categoria": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["familia"],
+      "properties": {
+        "familia": { "type": "string", "minLength": 1, "description": "Nome PostScript ou nome de família instalado no macOS." },
+        "peso": { "enum": ["normal", "negrito"], "default": "normal" },
+        "italico": { "type": "boolean", "default": false },
+        "cor": { "type": "string", "description": "Nome de uma cor em cores.definicoes." }
+      }
+    },
+    "cor": {
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false, "required": ["modelo", "valores"],
+          "properties": {
+            "modelo": { "const": "cmyk" },
+            "valores": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 100 }, "minItems": 4, "maxItems": 4 }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["modelo", "valor"],
+          "properties": {
+            "modelo": { "const": "cinza" },
+            "valor": { "type": "number", "minimum": 0, "maximum": 100, "description": "% de preto (DeviceGray). SPIKE S5: o InDesign separa só em K, mas o padrão recomendado é cmyk 0/0/0/100." }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["modelo", "nome", "alternativa_cmyk"],
+          "properties": {
+            "modelo": { "const": "especial" },
+            "nome": { "type": "string", "description": "Nome exato da tinta especial, idêntico ao amostra de cor do InDesign (ex.: 'PANTONE 300 C')." },
+            "tinta": { "type": "number", "minimum": 0, "maximum": 100, "default": 100 },
+            "alternativa_cmyk": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 100 }, "minItems": 4, "maxItems": 4 }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "identifier": "default",
+  "description": "Janela do editor",
+  "windows": ["main"],
+  "permissions": ["core:default", "dialog:default", "deep-link:default"]
+}

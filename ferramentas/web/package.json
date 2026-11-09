@@ -1,0 +1,9 @@
+{
+  "name": "eqpress-verificar-latex",
+  "private": true,
+  "description": "CA-17: confere que o LaTeX canônico renderiza em KaTeX e MathJax 3",
+  "dependencies": {
+    "katex": "0.16.11",
+    "mathjax-full": "3.2.2"
+  }
+}

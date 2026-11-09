@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "nome": "exemplo_atual",
+  "versao": 1,
+  "colecao": "Exemplo",
+  "categorias": {
+    "texto": { "familia": "Calibri" },
+    "funcao": { "familia": "Calibri" },
+    "variavel": { "familia": "Calibri", "italico": false },
+    "grego_min": { "familia": "Symbol" },
+    "grego_mai": { "familia": "Symbol" },
+    "simbolo": { "familia": "Symbol" },
+    "vetor_matriz": { "familia": "Calibri", "peso": "negrito" },
+    "numero": { "familia": "Calibri" },
+    "extra": { "familia": "Calibri Light" }
+  },
+  "fonte_matematica": "STIX Two Math",
+  "tamanhos": {
+    "completo": "10pt",
+    "subscrito": "7pt",
+    "sub_subscrito": "8%",
+    "simbolo": "11%",
+    "sub_simbolo": "9pt"
+  },
+  "espacamentos": {
+    "linespace": "150%", "matrixrow": "150%", "matrixcol": "100%", "supheight": "45%",
+    "subdepth": "25%", "subsupgap": "8%", "limheight": "25%", "limdepth": "100%",
+    "limspace": "100%", "fractheight": "35%", "fractdepth": "100%", "fractover": "8%",
+    "fractthick": "5%", "fractthick2": "2.5%", "fractgap": "8%", "fenceover": "8%",
+    "operspacing": "100%", "nonoperspacing": "100%", "charwidth": "0%", "mingap": "8%",
+    "vradgap": "17%", "hradgap": "8%", "radwidth": "100%", "embellgap": "12.5%",
+    "primeheight": "45%", "box_stroke_thick": "5%", "strike_thru_thick": "5%",
+    "matrix_part_thick": "5%", "rad_thick": "5%", "horiz_fence_gap": "10%"
+  },
+  "cores": {
+    "definicoes": {
+      "Preto 100K": { "modelo": "cmyk", "valores": [0, 0, 0, 100] },
+      "Destaque": { "modelo": "cmyk", "valores": [0, 100, 100, 0] }
+    },
+    "padrao": "Preto 100K",
+    "destaque": "Destaque",
+    "sobreimpressao": true
+  },
+  "saida": { "formato": "pdfx4", "texto": "contorno", "extras": ["eps", "emf"] },
+  "texto_vivo": {
+    "habilitado": false,
+    "estilo_caractere": "Eq Texto",
+    "regras": ["um_simbolo", "numero_com_unidade"],
+    "nunca": ["com_fracao", "com_raiz", "com_delimitador_extensivel", "destacada"]
+  },
+  "qa": { "exigir_tinta_unica": true, "tolerancia_baseline_pt": 0.1 }
+}

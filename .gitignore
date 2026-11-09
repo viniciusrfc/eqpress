@@ -1,0 +1,15 @@
+.venv/
+.DS_Store
+__pycache__/
+spikes/out/
+samples/
+node_modules/
+editor/src-tauri/target/
+editor/src-tauri/gen/
+editor/ui/vendor/
+dist/
+build/
+.claude/
+/windows/
+editor/src-tauri/binaries/
+editor/src-tauri/ferramentas/

@@ -1,0 +1,7 @@
+{
+  "bundle": {
+    "targets": ["app"],
+    "externalBin": ["binaries/eqpress-nucleo"],
+    "macOS": { "minimumSystemVersion": "15.0" }
+  }
+}

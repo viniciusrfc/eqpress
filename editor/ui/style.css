@@ -1,0 +1,191 @@
+/* EqPress — janela compacta: paletas, edição e a prova numa faixa embaixo. A prova é o centro:
+   equação em preto 100K sobre papel, linha de base em ciano de guia (azul não imprimível). */
+:root {
+  --grafite: #23272e;
+  --grafite-2: #5b6370;
+  --nevoa: #eceff2;
+  --fio: #d5dae0;
+  --papel: #ffffff;
+  --guia: #00a0c6;
+  --guia-claro: rgba(0, 160, 198, 0.12);
+  --erro: #b3261e;
+  --salvo: #2f7d4f;
+  --raio: 6px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --grafite: #e6e9ed;
+    --grafite-2: #a3abb6;
+    --nevoa: #1c1f24;
+    --fio: #343a43;
+    --papel: #262a31;
+    --guia: #3ec3e6;
+    --guia-claro: rgba(62, 195, 230, 0.16);
+    --erro: #f2a19a;
+    --salvo: #7fcf9f;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; display: grid; grid-template-rows: auto minmax(0, 1fr);
+  background: var(--nevoa); color: var(--grafite);
+  font: 14px/1.45 "Lato", -apple-system, sans-serif;  /* Lato (OFL), embutida em vendor/lato */
+  font-variant-numeric: tabular-nums;
+}
+button, select, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--guia); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* --- navegação entre Início, Padrões e Equação --------------------------------------------- */
+.navegacao { display: flex; align-items: center; gap: 2px; padding: 6px 12px 0; border-bottom: 1px solid var(--fio); }
+.marca { font-weight: 700; margin-right: 14px; letter-spacing: .01em; }
+.aba { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 6px 12px 8px; color: var(--grafite-2); }
+.aba[aria-current="page"] { color: var(--grafite); border-bottom-color: var(--guia); font-weight: 700; }
+.aba:not(:disabled):hover { color: var(--grafite); }
+.vista { min-height: 0; overflow: auto; }
+#vista-equacao { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto auto; overflow: hidden; }
+
+/* --- Início: as três tarefas, uma embaixo da outra ------------------------------------------- */
+.inicio { max-width: 760px; padding: 18px 20px 28px; display: flex; flex-direction: column; gap: 22px; }
+.tarefa { display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid var(--fio); }
+.tarefa:last-child { border-bottom: 0; }
+h1 { font-size: 17px; font-weight: 700; margin: 0; }
+.explica { margin: 0; color: var(--grafite-2); max-width: 68ch; }
+.linha { display: grid; grid-template-columns: 96px auto minmax(0, 1fr); align-items: center; gap: 10px; }
+.linha .rotulo { color: var(--grafite-2); }
+.linha .valor { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--grafite-2); }
+.linha select { grid-column: 2 / -1; max-width: 360px; }
+.acoes { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.resultado { color: var(--grafite-2); }
+.resultado.ok { color: var(--salvo); }
+.resultado.erro { color: var(--erro); }
+.depois { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.depois .explica { flex-basis: 100%; }
+
+/* --- Padrões: lista à esquerda, ficha à direita --------------------------------------------- */
+.padroes { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: 100%; }
+.lista { border-right: 1px solid var(--fio); display: flex; flex-direction: column; }
+.lista ul { list-style: none; margin: 0; padding: 8px; flex: 1; overflow: auto; }
+.lista li button { width: 100%; text-align: left; border: 0; border-radius: var(--raio); background: none; padding: 7px 9px; display: flex; flex-direction: column; gap: 1px; }
+.lista li button:hover { background: var(--papel); }
+.lista li button[aria-current="true"] { background: var(--papel); box-shadow: inset 2px 0 0 var(--guia); }
+.lista li .nome-pd { font-weight: 700; }
+.lista li .resumo-pd { color: var(--grafite-2); font-size: 12px; }
+.lista li .erro-pd { color: var(--erro); font-size: 12px; }
+.lista-acoes { display: flex; gap: 6px; padding: 10px; border-top: 1px solid var(--fio); }
+.ficha { padding: 16px 18px 20px; display: flex; flex-direction: column; gap: 12px; max-width: 620px; }
+.ficha > .campo-form { flex: none; }  /* flex: 1 é só para campos lado a lado (.linha-form) */
+.campo-form.largo input { font-size: 15px; }
+.campo-form.estreito { flex: 0 0 90px; }
+fieldset.cor { border: 1px solid var(--fio); border-radius: var(--raio); padding: 8px 12px 12px; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+fieldset.cor legend { color: var(--grafite-2); font-size: 12px; padding: 0 4px; }
+.especial { flex-basis: 100%; display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.cmyk { display: flex; align-items: center; gap: 4px; color: var(--grafite-2); font-size: 12px; }
+.cmyk input { width: 52px; }
+.cmyk span { margin-right: 4px; }
+.opcoes { display: flex; gap: 18px; flex-wrap: wrap; }
+.folha.amostra { height: 120px; }
+.ficha .acoes { justify-content: space-between; }
+.ficha .acoes .resultado { flex: 1; }
+
+/* --- topo ------------------------------------------------------------------------------------ */
+.topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; }
+.identidade { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.eq-id { font-size: 15px; font-weight: 700; white-space: nowrap; }
+.caminho { color: var(--grafite-2); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comandos { display: flex; align-items: center; gap: 6px; flex: none; }
+.separador { width: 1px; height: 20px; background: var(--fio); margin: 0 4px; }
+select, input { background: var(--papel); border: 1px solid var(--fio); border-radius: var(--raio); padding: 4px 6px; }
+button { border: 1px solid var(--fio); border-radius: var(--raio); padding: 4px 10px; background: var(--papel); cursor: pointer; }
+button:disabled { opacity: .45; cursor: default; }
+button.discreto { background: transparent; }
+button.discreto:not(:disabled):hover, button.discreto[aria-expanded="true"] { border-color: var(--grafite-2); background: var(--papel); }
+button.salvar { background: var(--grafite); color: var(--papel); border-color: var(--grafite); font-weight: 700; padding: 4px 16px; }
+button.salvar.pendente::after, #aj-botao.ativo::after {
+  content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 7px; border-radius: 50%; background: var(--guia); vertical-align: middle;
+}
+button.link { border: 0; background: none; color: var(--grafite-2); padding: 0 2px; text-decoration: underline; text-underline-offset: 2px; }
+button.link[aria-expanded="true"] { color: var(--guia); }
+
+/* --- paletas: duas fileiras (símbolos em cima, modelos embaixo) ------------------------------ */
+.paletas {
+  display: grid; grid-template-columns: repeat(11, minmax(0, 1fr));
+  border-top: 1px solid var(--fio); border-bottom: 1px solid var(--fio); background: var(--papel);
+}
+.paletas .grupo {
+  height: 34px; border: 0; border-radius: 0; border-right: 1px solid var(--fio); background: transparent;
+  display: flex; align-items: center; justify-content: center; font-size: 15px; padding: 0 2px; overflow: hidden;
+}
+.paletas .grupo:nth-child(11n) { border-right: 0; }
+.paletas .grupo:nth-child(-n+11) { border-bottom: 1px solid var(--fio); }
+.paletas .grupo:hover, .paletas .grupo.aberto { background: var(--guia-claro); }
+.grade {
+  position: fixed; z-index: 10; background: var(--papel); border: 1px solid var(--fio); border-radius: var(--raio);
+  box-shadow: 0 10px 28px rgba(20, 30, 45, .18); padding: 6px; display: grid; grid-template-columns: repeat(6, 42px); gap: 3px;
+}
+.grade .titulo { grid-column: 1 / -1; color: var(--grafite-2); font-size: 12px; padding: 0 2px 2px; }
+.grade button { height: 40px; padding: 0; border-color: transparent; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.grade button:hover { border-color: var(--guia); background: var(--guia-claro); }
+
+/* --- edição ------------------------------------------------------------------------------------ */
+.mesa { position: relative; display: flex; flex-direction: column; padding: 10px 12px; min-height: 0; }
+math-field {
+  display: block; flex: 1; min-height: 90px; font-size: 26px; padding: 18px 16px;
+  background: var(--papel); color: var(--grafite); border: 1px solid var(--fio); border-radius: var(--raio);
+  --caret-color: var(--guia); --selection-background-color: var(--guia-claro);
+}
+math-field:focus-within { border-color: var(--guia); outline: none; }
+.latex-painel { margin-top: 8px; }
+.latex-painel textarea {
+  display: block; width: 100%; height: 72px; padding: 8px; resize: vertical;
+  font: 12px/1.5 Menlo, monospace; background: var(--papel); border: 1px solid var(--fio); border-radius: var(--raio);
+}
+
+/* --- prova: faixa embaixo; o elemento que importa --------------------------------------------- */
+.prova { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 0 12px 10px; }
+.folha {
+  position: relative; background: #fff; border: 1px solid var(--fio); border-radius: 2px;
+  height: 118px; padding: 12px 56px 12px 22px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.folha .vazio { color: #6d7480; margin: 0; text-align: center; }
+.folha .eq { position: relative; display: inline-block; line-height: 0; max-width: 100%; max-height: 100%; }
+.folha .eq img { display: block; max-width: 100%; max-height: 94px; width: auto; height: auto; }
+.folha .base { position: absolute; left: -22px; right: -56px; height: 0; border-top: 1px solid var(--guia); }
+.folha .base span { position: absolute; left: 4px; top: 2px; font-size: 10px; color: var(--guia); line-height: 1; }
+.folha .cota { position: absolute; right: -42px; width: 10px; border: 1px solid var(--guia); border-left: 0; }
+.folha .cota span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--guia); white-space: nowrap; line-height: 1; }
+.folha.erro { background: transparent; border-color: var(--erro); color: var(--erro); justify-content: flex-start; }
+.folha.erro p { margin: 0; overflow: auto; max-height: 100%; }
+.folha.atualizando .eq { opacity: .45; transition: opacity .15s; }
+.medidas { display: grid; grid-template-columns: auto auto; gap: 6px 16px; margin: 0; }
+.medidas dt { color: var(--grafite-2); font-size: 11px; }
+.medidas dd { margin: 0; font-size: 14px; }
+#tinta::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 2px; background: #000; box-shadow: 0 0 0 1px var(--fio); vertical-align: -1px; }
+
+/* --- fonte desta equação: painel pequeno preso ao botão --------------------------------------- */
+.ajuste {
+  position: fixed; z-index: 11; width: 300px; display: flex; flex-direction: column; gap: 8px; padding: 12px;
+  background: var(--papel); border: 1px solid var(--fio); border-radius: var(--raio); box-shadow: 0 10px 28px rgba(20, 30, 45, .18);
+}
+.nota { margin: 0; color: var(--grafite-2); font-size: 12px; }
+.ajuste.ativo .nota { color: var(--guia); }
+.campo-form { display: flex; flex-direction: column; gap: 3px; color: var(--grafite-2); font-size: 12px; flex: 1; }
+.campo-form input, .campo-form select { color: var(--grafite); font-size: 13px; width: 100%; }
+.linha-form { display: flex; gap: 8px; }
+#aj-limpar { align-self: flex-start; }
+
+/* --- rodapé ------------------------------------------------------------------------------------ */
+.rodape { display: flex; justify-content: space-between; gap: 12px; padding: 5px 12px; border-top: 1px solid var(--fio); color: var(--grafite-2); font-size: 12px; }
+#estado { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#estado.ok { color: var(--salvo); }
+#estado.erro { color: var(--erro); }
+
+@media (max-width: 760px) {
+  .prova { grid-template-columns: 1fr; }
+  .medidas { grid-template-columns: repeat(4, auto); }
+  .caminho { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

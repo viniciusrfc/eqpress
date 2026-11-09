@@ -1,0 +1,116 @@
+# EqPress no Windows (plano W0/W1): testes do núcleo num Windows a cada envio, com as
+# ferramentas instaladas, e o diagnóstico (fontes, Symbol do Windows, render de teste).
+# Os testes que precisam de samples/ (material dos autores, fora do git) são pulados aqui.
+name: windows
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  testes:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements.txt
+      - name: Ferramentas (Ghostscript, Inkscape, tectonic)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          choco install ghostscript inkscape -y --no-progress
+          $gs = Get-ChildItem "C:\Program Files\gs\*\bin" | Select-Object -First 1
+          Add-Content $env:GITHUB_PATH $gs.FullName
+          # Inkscape\bin traz um python.exe próprio: fora do PATH; o EqPress acha pela variável
+          Add-Content $env:GITHUB_ENV "EQPRESS_FERRAMENTAS=C:\Program Files\Inkscape"
+          gh release download "tectonic@0.17.0" --repo tectonic-typesetting/tectonic -p "*x86_64-pc-windows-msvc.zip" -D tt
+          Expand-Archive (Get-ChildItem tt\*.zip).FullName -DestinationPath tectonic
+          Add-Content $env:GITHUB_PATH "$PWD\tectonic"
+      - name: Diagnóstico (Arial; Symbol do Windows)
+        run: python -m eqpress diagnostico --familia Arial
+      - run: python -m pytest -q -rs
+
+  # Instalador (plano W4): núcleo empacotado + ferramentas + app → EqPress-Setup.exe.
+  # Roda em tags v* e quando pedido manualmente (leva ~20 min).
+  instalador:
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: testes
+    runs-on: windows-latest
+    permissions:
+      contents: write  # enviar o instalador ao Release
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Núcleo (PyInstaller)
+        run: |
+          python -m pip install -r requirements.txt pyinstaller==6.16.0
+          pyinstaller -y --log-level WARN eqpress-nucleo.spec
+          New-Item -ItemType Directory -Force editor/src-tauri/binaries | Out-Null
+          Copy-Item dist/eqpress-nucleo.exe editor/src-tauri/binaries/eqpress-nucleo-x86_64-pc-windows-msvc.exe
+      - name: Ferramentas (tectonic + pacote TeX offline, Ghostscript, Inkscape)
+        run: |
+          $f = "editor/src-tauri/ferramentas"
+          New-Item -ItemType Directory -Force $f/tectonic, $f/tectonic-cache | Out-Null
+          gh release download "tectonic@0.17.0" --repo tectonic-typesetting/tectonic -p "*x86_64-pc-windows-msvc.zip" -D tt
+          Expand-Archive (Get-ChildItem tt\*.zip).FullName -DestinationPath $f/tectonic
+          choco install ghostscript inkscape -y --no-progress
+          $gs = (Get-ChildItem "C:\Program Files\gs" -Directory | Select-Object -First 1).FullName
+          New-Item -ItemType Directory -Force $f/gs, $f/licencas | Out-Null
+          Copy-Item LICENSE, THIRD_PARTY_NOTICES.md, recursos/licencas/*, recursos/fontes/STIX-OFL.txt $f/licencas/
+          $ink_v = (Get-Item "C:\Program Files\Inkscape\bin\inkscape.exe" -ErrorAction SilentlyContinue).VersionInfo.ProductVersion
+          "$(Split-Path $gs -Leaf); Inkscape $ink_v; tectonic 0.17.0" | Set-Content $f/licencas/VERSOES.txt
+          Copy-Item -Recurse "$gs\bin", "$gs\lib", "$gs\Resource" $f/gs/ -ErrorAction SilentlyContinue
+          Copy-Item -Recurse "C:\Program Files\Inkscape" $f/inkscape
+          # só o necessário para PDF → EMF pela linha de comando: fora traduções, tutoriais, exemplos,
+          # ícones, documentação e o Python dos complementos
+          $ink = "$f/inkscape"
+          Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "$ink/share/locale", "$ink/share/doc", "$ink/share/man",
+            "$ink/share/inkscape/tutorials", "$ink/share/inkscape/examples", "$ink/share/inkscape/extensions",
+            "$ink/share/inkscape/icons", "$ink/share/inkscape/themes", "$ink/share/inkscape/templates",
+            "$ink/share/inkscape/doc", "$ink/share/icons", "$ink/lib/python3*", "$ink/bin/python*.exe",
+            "$ink/bin/pythonw*.exe", "$ink/share/gtk-doc", "$ink/share/inkscape/screens"
+          # pacote TeX: compilar uma vez com o cache apontado para a pasta que vai no instalador
+          $env:EQPRESS_FERRAMENTAS = (Resolve-Path $f).Path
+          $env:TECTONIC_CACHE_DIR = (Resolve-Path $f/tectonic-cache).Path
+          ./dist/eqpress-nucleo.exe diagnostico --familia Arial
+          ./dist/eqpress-nucleo.exe diagnostico --familia Calibri
+          Set-Content $f/tectonic-cache/VERSAO "tectonic 0.17.0 / ${{ github.sha }}"
+          Get-ChildItem $f | ForEach-Object { "{0,-16} {1,8:N0} MB" -f $_.Name, ((Get-ChildItem $_.FullName -Recurse -File | Measure-Object Length -Sum).Sum / 1MB) }
+          "--- inkscape por pasta ---"
+          Get-ChildItem $ink, "$ink/share", "$ink/lib" -Directory | ForEach-Object { "{0,-40} {1,8:N0} MB" -f $_.FullName.Substring($_.FullName.IndexOf("inkscape")), ((Get-ChildItem $_.FullName -Recurse -File | Measure-Object Length -Sum).Sum / 1MB) }
+      - name: Teste offline do núcleo empacotado
+        run: |
+          $env:EQPRESS_FERRAMENTAS = (Resolve-Path editor/src-tauri/ferramentas).Path
+          Remove-Item Env:TECTONIC_CACHE_DIR -ErrorAction SilentlyContinue
+          ./dist/eqpress-nucleo.exe diagnostico --familia Arial --completo
+          # os pedidos da tela Padrões, como o app (1ª vez fria, 2ª com caches)
+          python tests/fluxo_app.py dist/eqpress-nucleo.exe
+          python tests/fluxo_app.py dist/eqpress-nucleo.exe
+      - name: App e instalador (Tauri NSIS)
+        working-directory: editor
+        run: |
+          # comando externo com erro para a etapa (sem isto o vendor falhou calado: botões mortos)
+          $PSNativeCommandUseErrorActionPreference = $true
+          $ErrorActionPreference = 'Stop'
+          npm ci
+          npm run vendor
+          npx tauri build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EqPress-Setup
+          path: editor/src-tauri/target/release/bundle/nsis/*.exe
+          retention-days: 30
+      - name: Enviar ao Release (só em tags)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          # os dois workflows criam o mesmo Release: quem chegar depois só envia o arquivo
+          gh release create $env:GITHUB_REF_NAME --generate-notes --repo $env:GITHUB_REPOSITORY
+          gh release upload $env:GITHUB_REF_NAME (Get-ChildItem editor/src-tauri/target/release/bundle/nsis/*.exe).FullName --clobber --repo $env:GITHUB_REPOSITORY

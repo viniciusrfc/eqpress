@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EqPress</title>
+<link rel="stylesheet" href="vendor/mathlive/mathlive-static.css">
+<link rel="stylesheet" href="vendor/lato/400.css">
+<link rel="stylesheet" href="vendor/lato/700.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="navegacao" aria-label="Seções">
+  <span class="marca">EqPress</span>
+  <button class="aba" data-vista="inicio" aria-current="page">Início</button>
+  <button class="aba" data-vista="padroes">Padrões dos livros</button>
+  <button class="aba" data-vista="equacao" id="aba-equacao" disabled>Equação</button>
+</nav>
+
+<section class="vista" id="vista-inicio">
+  <div class="inicio">
+    <article class="tarefa">
+      <h1>Preparar um Word</h1>
+      <p class="explica">Troca as equações do MathType pelas do EqPress, no padrão do livro. Gera o Word para o InDesign, um Word editável e os PDFs das equações.</p>
+      <div class="linha">
+        <span class="rotulo">Word</span>
+        <button id="pr-escolher">Escolher .docx…</button>
+        <span class="valor" id="pr-docx">Nenhum arquivo escolhido</span>
+      </div>
+      <div class="linha">
+        <span class="rotulo">Padrão</span>
+        <select id="pr-padrao" class="lista-padroes"></select>
+      </div>
+      <div class="acoes">
+        <button id="pr-ir" class="salvar" disabled>Preparar</button>
+        <span class="resultado" id="pr-resultado" aria-live="polite"></span>
+      </div>
+      <div class="depois" id="pr-depois" hidden>
+        <button id="pr-conferir">Abrir conferência</button>
+        <button id="pr-finder" class="discreto">Mostrar no Finder</button>
+        <p class="explica">No InDesign: Arquivo › Inserir do Word para o InDesign, depois o script “EqPress - Vincular e alinhar equações”.</p>
+      </div>
+    </article>
+
+    <article class="tarefa">
+      <h1>Trocar o padrão de um livro já montado</h1>
+      <p class="explica">Refaz todas as equações de um livro com outro padrão, sem inserir o Word de novo. Equações com fonte própria continuam como estão.</p>
+      <div class="linha">
+        <span class="rotulo">Livro</span>
+        <button id="tr-escolher">Escolher pasta _EqPress…</button>
+        <span class="valor" id="tr-pasta">Nenhuma pasta escolhida</span>
+      </div>
+      <div class="linha">
+        <span class="rotulo">Padrão novo</span>
+        <select id="tr-padrao" class="lista-padroes"></select>
+      </div>
+      <div class="acoes">
+        <button id="tr-ir" class="salvar" disabled>Trocar o padrão</button>
+        <span class="resultado" id="tr-resultado" aria-live="polite"></span>
+      </div>
+    </article>
+
+    <article class="tarefa">
+      <h1>Editar uma equação</h1>
+      <p class="explica">No InDesign, selecione a equação e rode “EqPress - Editar equação selecionada”. Ou abra o arquivo da equação aqui.</p>
+      <div class="acoes">
+        <button id="eq-abrir">Abrir equação…</button>
+        <button id="eq-scripts" class="discreto">Instalar scripts no InDesign</button>
+        <button id="diag" class="discreto">Copiar diagnóstico</button>
+        <span class="resultado" id="eq-resultado" aria-live="polite"></span>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="vista" id="vista-padroes" hidden>
+  <div class="padroes">
+    <aside class="lista">
+      <ul id="pd-lista" aria-label="Padrões neste Mac"></ul>
+      <div class="lista-acoes">
+        <button id="pd-novo">Novo padrão</button>
+        <button id="pd-importar" class="discreto">Importar…</button>
+      </div>
+    </aside>
+    <form class="ficha" id="pd-ficha" autocomplete="off">
+      <label class="campo-form largo">Nome do padrão
+        <input id="pd-nome" placeholder="Ex.: Física 8º ano – Arial 10" required>
+      </label>
+      <div class="linha-form">
+        <label class="campo-form">Fonte das equações
+          <input id="pd-familia" list="familias" required>
+        </label>
+        <label class="campo-form estreito">Corpo (pt)
+          <input id="pd-corpo" type="number" min="5" max="72" step="0.5" required>
+        </label>
+        <label class="campo-form">Variáveis
+          <select id="pd-italico"><option value="nao">Retas</option><option value="sim">Em itálico</option></select>
+        </label>
+      </div>
+      <label class="campo-form">Gregos, setas e símbolos
+        <input id="pd-simbolos" list="familias" placeholder="Symbol">
+      </label>
+      <fieldset class="cor">
+        <legend>Cor das equações</legend>
+        <label><input type="radio" name="pd-cor" value="preto" checked> Preto 100K</label>
+        <label><input type="radio" name="pd-cor" value="especial"> Tinta especial</label>
+        <div class="especial" id="pd-especial" hidden>
+          <label class="campo-form">Nome da tinta, igual ao do InDesign
+            <input id="pd-tinta" placeholder="PANTONE 219 C">
+          </label>
+          <div class="cmyk">
+            <span>Alternativa CMYK</span>
+            <input id="pd-c" type="number" min="0" max="100" aria-label="Ciano">
+            <input id="pd-m" type="number" min="0" max="100" aria-label="Magenta">
+            <input id="pd-y" type="number" min="0" max="100" aria-label="Amarelo">
+            <input id="pd-k" type="number" min="0" max="100" aria-label="Preto">
+          </div>
+        </div>
+      </fieldset>
+      <div class="opcoes">
+        <label><input type="checkbox" id="pd-sobre" checked> Sobreimpressão</label>
+        <label><input type="checkbox" id="pd-eps"> Gerar EPS</label>
+        <label><input type="checkbox" id="pd-emf"> Gerar EMF</label>
+      </div>
+      <div class="folha amostra" id="pd-prova"><p class="vazio">A prova do padrão aparece aqui.</p></div>
+      <div class="acoes">
+        <button type="button" id="pd-exportar" class="discreto">Exportar…</button>
+        <span class="resultado" id="pd-resultado" aria-live="polite"></span>
+        <button type="submit" id="pd-salvar" class="salvar">Salvar como versão nova</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="vista" id="vista-equacao" hidden>
+<header class="topo">
+  <div class="identidade">
+    <span class="eq-id" id="eq-id">EqPress</span>
+    <span class="caminho" id="arquivo">Nenhuma equação aberta</span>
+  </div>
+  <div class="comandos">
+    <select id="estilo" aria-label="Estilo do trecho selecionado" title="Estilo do trecho selecionado">
+      <option value="">Estilo</option>
+      <option value="\text{#0}">Texto</option>
+      <option value="\mathrm{#0}">Função</option>
+      <option value="#0">Variável</option>
+      <option value="\mathbf{#0}">Vetor ou matriz</option>
+    </select>
+    <select id="tamanho" aria-label="Tamanho do trecho selecionado" title="Tamanho do trecho selecionado">
+      <option value="">Tamanho</option>
+      <option value="{\scriptstyle #0}">Índice</option>
+      <option value="{\scriptscriptstyle #0}">Sub-índice</option>
+    </select>
+    <button id="aj-botao" class="discreto" aria-expanded="false" aria-controls="ajuste">Fonte desta equação</button>
+    <span class="separador"></span>
+    <button id="abrir" class="discreto" title="Abrir equação (⌘O)">Abrir…</button>
+    <button id="salvar" class="salvar" title="Salvar e atualizar o PDF (⌘S)">Salvar</button>
+  </div>
+</header>
+
+<nav class="paletas" id="paletas" aria-label="Símbolos e modelos"></nav>
+
+<main class="mesa">
+  <math-field id="campo" aria-label="Equação"></math-field>
+  <section class="latex-painel" id="latex-painel" hidden>
+    <textarea id="latex" spellcheck="false" aria-label="LaTeX da equação"></textarea>
+  </section>
+</main>
+
+<section class="prova" aria-label="Prova" aria-live="polite">
+  <div class="folha" id="folha">
+    <p class="vazio">A prova mostra a equação como ela sai no livro, sobre a linha de base.</p>
+  </div>
+  <dl class="medidas" id="medidas" hidden>
+    <div><dt>Tinta</dt><dd id="tinta"></dd></div>
+    <div><dt>Largura</dt><dd id="m-largura"></dd></div>
+    <div><dt>Altura</dt><dd id="m-altura"></dd></div>
+    <div><dt>Desce da linha</dt><dd id="m-desce"></dd></div>
+  </dl>
+</section>
+
+<footer class="rodape">
+  <span id="estado">Abra uma equação pelo InDesign ou em Abrir…</span>
+  <button id="latex-botao" class="link" aria-expanded="false" aria-controls="latex-painel">LaTeX</button>
+</footer>
+</section>
+
+<div class="ajuste" id="ajuste" hidden>
+  <p class="nota" id="nota-padrao">Sem ajuste, vale o padrão do livro.</p>
+  <label class="campo-form">Fonte
+    <input id="aj-familia" list="familias" placeholder="Como no livro" autocomplete="off">
+  </label>
+  <div class="linha-form">
+    <label class="campo-form">Corpo (pt)
+      <input id="aj-corpo" type="number" min="5" max="72" step="0.5" placeholder="Livro">
+    </label>
+    <label class="campo-form">Variáveis
+      <select id="aj-italico">
+        <option value="">Como no livro</option>
+        <option value="sim">Em itálico</option>
+        <option value="nao">Retas</option>
+      </select>
+    </label>
+  </div>
+  <button id="aj-limpar" class="discreto" disabled>Voltar ao padrão do livro</button>
+</div>
+
+<datalist id="familias"></datalist>
+<!-- ED-04: o LaTeX salvo precisa abrir no KaTeX e no MathJax (uso web); a conferência roda aqui -->
+<script>
+  // mathtools (\\xrightleftharpoons…), cancel e color: os mesmos pacotes do LaTeX do EqPress
+  window.MathJax = {
+    loader: { load: ["[tex]/mathtools", "[tex]/cancel", "[tex]/color"] },
+    tex: { packages: { "[+]": ["mathtools", "cancel", "color"], "[-]": ["noerrors", "noundefined"] } },
+    startup: { typeset: false },
+  };
+</script>
+<script src="vendor/katex/katex.min.js"></script>
+<script src="vendor/mathjax/tex-mml-chtml.js"></script>
+<div class="grade" id="grade" hidden></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

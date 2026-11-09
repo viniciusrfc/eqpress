@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "nome": "exemplo_resolucao",
+  "versao": 1,
+  "baseado_em": "exemplo_atual_v1",
+  "categorias": {},
+  "cores": {
+    "definicoes": {
+      "PANTONE 219 C": { "modelo": "especial", "nome": "PANTONE 219 C", "alternativa_cmyk": [0, 90, 0, 0] }
+    },
+    "padrao": "PANTONE 219 C",
+    "destaque": "PANTONE 219 C"
+  },
+  "saida": { "formato": "pdf", "texto": "contorno", "extras": ["eps", "emf"] }
+}
